@@ -1,21 +1,25 @@
 #!/usr/bin/python3
-"""Gather data from an API"""
+"""Export data in the CSV format."""
 import csv
 import requests
-from sys import argv
+import sys
 
 
 if __name__ == "__main__":
-    if len(argv) < 2:
-        exit()
+    API_URL = "https://jsonplaceholder.typicode.com"
+    if len(sys.argv) != 2:
+        print("Usage: {} employee_id".format(sys.argv[0]))
+        exit(1)
+    userId = sys.argv[1]
+    user = requests.get("{}/users/{}".format(API_URL, userId)).json()
 
-    url = "https://jsonplaceholder.typicode.com"
-    username = requests.get(f"{url}/users/{argv[1]}").json().get("username")
-    total_list = requests.get(f"{url}/todos?userId={argv[1]}").json()
+    if not user:
+        print("No employee record found for ID: {}".format(userId))
+        exit(1)
 
-    sum_of_list = len(total_list)
-    writer = csv.writer(open(f"{argv[1]}.csv", "w"), quoting=csv.QUOTE_ALL)
+    tasks = requests.get("{}/todos?userId={}".format(API_URL, userId)).json()
 
-    for i in total_list:
-        writer.writerow([i.get("userId"), username, i.get("completed"),
-                         i.get("title")])
+    with open("{}.csv".format(userId), "w") as csvfile:
+        writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+        [writer.writerow([userId, user.get("username"), task.get("completed"),
+                          task.get("title")]) for task in tasks]

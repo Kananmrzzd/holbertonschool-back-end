@@ -1,25 +1,29 @@
 #!/usr/bin/python3
-"""Gather data from an API"""
-import csv
+"""export data in the CSV format."""
 import json
 import requests
-from sys import argv
+import sys
 
 
 if __name__ == "__main__":
-    if len(argv) < 2:
-        exit()
-    new_list = []
-    new_dict = {}
+    API_URL = "https://jsonplaceholder.typicode.com"
+    if len(sys.argv) != 2:
+        print("Usage: {} employee_id".format(sys.argv[0]))
+        exit(1)
+    userId = sys.argv[1]
+    user = requests.get("{}/users/{}".format(API_URL, userId)).json()
 
-    url = "https://jsonplaceholder.typicode.com"
-    username = requests.get(f"{url}/users/{argv[1]}").json().get("username")
-    total_list = requests.get(f"{url}/todos?userId={argv[1]}").json()
-    sum_of_list = len(total_list)
+    if not user:
+        print("No employee record found for ID: {}".format(userId))
+        exit(1)
 
-    for todo in total_list:
-        new_list.append({'task': todo.get('title'),
-                         'completed': todo.get('completed'),
-                         'username': username})
-    new_dict[str(argv[1])] = new_list
-    json.dump(new_dict, open(f"{argv[1]}.json", "w"))
+    tasks = requests.get("{}/todos?userId={}".format(API_URL, userId)).json()
+    dictionary = {
+        userId: [{
+            "task": task.get("title"),
+            "completed": task.get("completed"),
+            "username": user.get("username")
+        } for task in tasks]
+    }
+    with open("{}.json".format(userId), "w") as jsonfile:
+        json.dump(dictionary, jsonfile)

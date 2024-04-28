@@ -1,27 +1,25 @@
 #!/usr/bin/python3
 """Gather data from an API"""
+import json
 import requests
-from sys import argv
+import sys
 
 
 if __name__ == "__main__":
-    if len(argv) < 2:
-        exit()
-
-    url = "https://jsonplaceholder.typicode.com"
-    user = requests.get(f"{url}/users/{argv[1]}").json().get("name")
-    total_list = requests.get(f"{url}/todos?userId={argv[1]}").json()
-
-    sum_of_list = len(total_list)
-    number_of_done_tasks = 0
-    completed_task_name = ""
-
-    for i in total_list:
-        if i["completed"]:
-            number_of_done_tasks += 1
-            completed_task_name += "\t " + i.get("title") + "\n"
-
-    print("Employee {} is done with tasks({}/{}):".
-          format(user, number_of_done_tasks, sum_of_list))
-    if completed_task_name != "":
-        print(completed_task_name[:-1])
+    if len(sys.argv) == 2:
+        res = requests.get('https://jsonplaceholder.typicode.com/users/' +
+                           f'{sys.argv[1]}/todos')
+    response = json.loads(res.text)
+    all_task = len(response)
+    done_task = 0
+    done_task_title = ""
+    for task in response:
+        if task["completed"] is True:
+            done_task_title += "\t " + task["title"] + "\n"
+            done_task = done_task + 1
+    user = requests.get('https://jsonplaceholder.typicode.com/users/' +
+                        f'{sys.argv[1]}')
+    user_response = json.loads(user.text)
+    user_name = user_response["name"]
+    print(f"Employee {user_name} is done with tasks({done_task}/{all_task}):")
+    print(done_task_title, end="")
