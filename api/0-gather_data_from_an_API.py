@@ -1,40 +1,27 @@
 #!/usr/bin/python3
-"""
-Module for tasks
-"""
+"""Gather data from an API"""
 import requests
 from sys import argv
 
 
-def main(id):
-    """
-    Retrieves user information and todos based on the given user ID.
-    """
-    base_url = "https://jsonplaceholder.typicode.com"
-    user_url = "{}/users/{}".format(base_url, id)
-    todo_url = "{}/todos?userId={}".format(base_url, id)
-
-    user = requests.get(user_url).json()
-    todos = requests.get(todo_url).json()
-
-    user_name = user.get("name")
-    total_tasks = len(todos)
-    completed_tasks = [
-        task.get("title") for task in todos if task.get("completed")
-    ]
-    completed_tasks_count = len(completed_tasks)
-
-    print(
-        "Employee {} is done with tasks({}/{}):".format(
-            user_name, completed_tasks_count, total_tasks
-        )
-    )
-
-    for task in completed_tasks:
-        print("\t " + task)
-
-
 if __name__ == "__main__":
-    if len(argv) == 2:
-        id = int(argv[1])
-        main(id)
+    if len(argv) < 2:
+        exit()
+
+    url = "https://jsonplaceholder.typicode.com"
+    user = requests.get(f"{url}/users/{argv[1]}").json().get("name")
+    total_list = requests.get(f"{url}/todos?userId={argv[1]}").json()
+
+    sum_of_list = len(total_list)
+    number_of_done_tasks = 0
+    completed_task_name = ""
+
+    for i in total_list:
+        if i["completed"]:
+            number_of_done_tasks += 1
+            completed_task_name += "\t " + i.get("title") + "\n"
+
+    print("Employee {} is done with tasks({}/{}):".
+          format(user, number_of_done_tasks, sum_of_list))
+    if completed_task_name != "":
+        print(completed_task_name[:-1])

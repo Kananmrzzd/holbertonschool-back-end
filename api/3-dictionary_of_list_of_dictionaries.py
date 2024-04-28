@@ -1,43 +1,40 @@
 #!/usr/bin/python3
-"""
-Module for tasks
-"""
+
+"""Dictionary of list of dictionaries"""
+
 import json
 import requests
-from sys import argv
 
 
-def main():
-    """
-    Retrieves user information and todos based on the given user ID.
-    """
-    base_url = "https://jsonplaceholder.typicode.com"
-    user_url = "{}/users/".format(base_url)
+def fetch_employee_todo_progress():
+    all_tasks = {}
 
-    users = requests.get(user_url).json()
+    user_url = "https://jsonplaceholder.typicode.com/users/"
+    user = requests.get(user_url)
+    user_data = user.json()
 
-    final_dict = {}
+    for user in user_data:
+        user_id = user['id']
+        employee_name = user['username']
+        todos_url = "https://jsonplaceholder.typicode.com/todos?userId={}"\
+                    .format(user_id)
+        todos = requests.get(todos_url)
+        todos_data = todos.json()
 
-    for user in users:
-        todos = requests.get(
-            "{}/todos?userId={}".format(base_url, user.get("id"))
-        ).json()
-        new_user_list = []
+        datas = []
+        for task in todos_data:
+            data = {
+                    "username": employee_name,
+                    "task": task['title'],
+                    "completed": task['completed']
+                    }
+            datas.append(data)
+        all_tasks[user_id] = datas
 
-        for todo in todos:
-            new_user_list.append(
-                {
-                    "username": user.get("username"),
-                    "task": todo.get("title"),
-                    "completed": todo.get("completed"),
-                }
-            )
-
-            final_dict[user.get("id")] = new_user_list
-
-    with open("todo_all_employees.json", "w") as f:
-        json.dump(final_dict, f)
+    json_file = "todo_all_employees.json"
+    with open(json_file, 'w') as jsonfile:
+        json.dump(all_tasks, jsonfile)
 
 
 if __name__ == "__main__":
-    main()
+    fetch_employee_todo_progress()
