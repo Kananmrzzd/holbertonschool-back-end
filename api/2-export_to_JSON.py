@@ -1,33 +1,41 @@
 #!/usr/bin/python3
-
 """
-dict to json
+Module for tasks
 """
-
 import json
 import requests
-import sys
+from sys import argv
 
 
-def to_json(id):
-    user = requests.get(
-            f"https://jsonplaceholder.typicode.com/users/{id}").json()
+def main(id):
+    """
+    Retrieves user information and todos based on the given user ID.
+    """
+    base_url = "https://jsonplaceholder.typicode.com"
+    user_url = "{}/users/{}".format(base_url, id)
+    todo_url = "{}/todos?userId={}".format(base_url, id)
 
-    user_todo = requests.get(
-            f"https://jsonplaceholder.typicode.com/users/{id}/todos").json()
+    user = requests.get(user_url).json()
+    todos = requests.get(todo_url).json()
 
-    EMPLOYEE_USERNAME = user.get("username")
+    final_dict = {
+        f"{id}": []
+    }
 
-    data = []
+    for task in todos:
+        final_dict[f"{id}"].append(
+            {
+                "task": task["title"],
+                "completed": task["completed"],
+                "username": user["username"],
+            }
+        )
 
-    for ut in user_todo:
-        data.append({"task": ut.get("title"),
-                     "completed": ut.get("completed"),
-                     "username": EMPLOYEE_USERNAME})
-
-    with open(f'{id}.json', mode='w') as f:
-        json.dump({id: data}, f)
+    with open(f"{id}.json", "w") as f:
+        json.dump(final_dict, f)
 
 
-if __name__ == "__main__" and len(sys.argv) == 2:
-    to_json(int(sys.argv[1]))
+if __name__ == "__main__":
+    if len(argv) == 2:
+        id = int(argv[1])
+        main(id)

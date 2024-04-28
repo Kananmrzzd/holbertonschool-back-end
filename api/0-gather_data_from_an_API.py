@@ -1,36 +1,40 @@
 #!/usr/bin/python3
-
 """
-task 0 - fetching fake api
+Module for tasks
 """
-
-
 import requests
-import sys
+from sys import argv
 
 
-def todos(id):
-    user = requests.get(
-            f"https://jsonplaceholder.typicode.com/users/{id}").json()
-    user_todo = requests.get(
-            f"https://jsonplaceholder.typicode.com/users/{id}/todos").json()
+def main(id):
+    """
+    Retrieves user information and todos based on the given user ID.
+    """
+    base_url = "https://jsonplaceholder.typicode.com"
+    user_url = "{}/users/{}".format(base_url, id)
+    todo_url = "{}/todos?userId={}".format(base_url, id)
 
-    EMPLOYEE_NAME = user.get("name")
-    NUMBER_OF_DONE_TASKS = 0
-    TOTAL_NUMBER_OF_TASKS = len(user_todo)
-    completed_titles = []
+    user = requests.get(user_url).json()
+    todos = requests.get(todo_url).json()
 
-    for usr in user_todo:
-        if usr.get("completed"):
-            NUMBER_OF_DONE_TASKS += 1
-            completed_titles.append(usr.get("title"))
+    user_name = user.get("name")
+    total_tasks = len(todos)
+    completed_tasks = [
+        task.get("title") for task in todos if task.get("completed")
+    ]
+    completed_tasks_count = len(completed_tasks)
 
-    print("Employee {} is done with tasks({}/{}):".format(
-         EMPLOYEE_NAME, NUMBER_OF_DONE_TASKS, TOTAL_NUMBER_OF_TASKS))
+    print(
+        "Employee {} is done with tasks({}/{}):".format(
+            user_name, completed_tasks_count, total_tasks
+        )
+    )
 
-    for ttls in completed_titles:
-        print(f"\t {ttls}")
+    for task in completed_tasks:
+        print("\t " + task)
 
 
-if __name__ == "__main__" and len(sys.argv) == 2:
-    todos(int(sys.argv[1]))
+if __name__ == "__main__":
+    if len(argv) == 2:
+        id = int(argv[1])
+        main(id)

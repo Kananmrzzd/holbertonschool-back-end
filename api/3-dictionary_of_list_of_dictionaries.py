@@ -1,38 +1,43 @@
 #!/usr/bin/python3
-
 """
-dict of all todos
+Module for tasks
 """
-
 import json
 import requests
-import sys
+from sys import argv
 
 
-def to_json():
-    user_todo = requests.get(
-            f"https://jsonplaceholder.typicode.com/todos",
-            params={"_expand": "user"}).json()
+def main():
+    """
+    Retrieves user information and todos based on the given user ID.
+    """
+    base_url = "https://jsonplaceholder.typicode.com"
+    user_url = "{}/users/".format(base_url)
 
-    data = []
-    usrs = {}
+    users = requests.get(user_url).json()
 
-    for ut in user_todo:
-        USER_ID = ut.get("userId")
-        EMPLOYEE_USERNAME = ut.get("user").get("username")
+    final_dict = {}
 
-        if data != [] and EMPLOYEE_USERNAME != data[-1].get("username"):
-            data = []
+    for user in users:
+        todos = requests.get(
+            "{}/todos?userId={}".format(base_url, user.get("id"))
+        ).json()
+        new_user_list = []
 
-        data.append({"task": ut.get("title"),
-                     "completed": ut.get("completed"),
-                     "username": EMPLOYEE_USERNAME})
+        for todo in todos:
+            new_user_list.append(
+                {
+                    "username": user.get("username"),
+                    "task": todo.get("title"),
+                    "completed": todo.get("completed"),
+                }
+            )
 
-        usrs.update({USER_ID: data})
+            final_dict[user.get("id")] = new_user_list
 
-    with open('todo_all_employees.json', mode='w') as f:
-        json.dump(usrs, f)
+    with open("todo_all_employees.json", "w") as f:
+        json.dump(final_dict, f)
 
 
 if __name__ == "__main__":
-    to_json()
+    main()

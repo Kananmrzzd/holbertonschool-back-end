@@ -1,31 +1,32 @@
 #!/usr/bin/python3
-
 """
-dict to csv
+Module for tasks
 """
-
 import csv
 import requests
-import sys
+from sys import argv
 
 
-def to_csv(id):
-    user = requests.get(
-            f"https://jsonplaceholder.typicode.com/users/{id}").json()
+def main(id):
+    """
+    Retrieves user information and todos based on the given user ID.
+    """
+    base_url = "https://jsonplaceholder.typicode.com"
+    user_url = "{}/users/{}".format(base_url, id)
+    todo_url = "{}/todos?userId={}".format(base_url, id)
 
-    user_todo = requests.get(
-            f"https://jsonplaceholder.typicode.com/users/{id}/todos").json()
+    user = requests.get(user_url).json()
+    todos = requests.get(todo_url).json()
 
-    EMPLOYEE_USERNAME = user.get("username")
+    csv_writer = csv.writer(open(f"{id}.csv", "w"), quoting=csv.QUOTE_ALL)
 
-    with open(f'{id}.csv', mode='w') as f:
-        emp = csv.writer(f, quoting=csv.QUOTE_ALL)
-
-        for usr in user_todo:
-            emp.writerow([id, EMPLOYEE_USERNAME,
-                         usr.get("completed"),
-                         usr.get("title")])
+    for task in todos:
+        csv_writer.writerow(
+            [user["id"], user["username"], task["completed"], task["title"]]
+        )
 
 
-if __name__ == "__main__" and len(sys.argv) == 2:
-    to_csv(int(sys.argv[1]))
+if __name__ == "__main__":
+    if len(argv) == 2:
+        id = int(argv[1])
+        main(id)
